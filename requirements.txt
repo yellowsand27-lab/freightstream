@@ -1,0 +1,4 @@
+# FreightStream ETL 依赖
+pymssql>=2.4          # MSSQL 源库读取（需 FreeTDS）
+psycopg[binary]>=3.2  # Postgres COPY 写入
+PyYAML>=6.0           # 读取 documents/*.yaml 连接配置

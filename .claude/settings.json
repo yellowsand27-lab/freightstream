@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/usr/local/opt/libpq/bin/psql *)",
+      "Bash(ssh root@ai.transknights.com *)",
+      "Bash(scp *)",
+      "Bash(sshpass *)"
+    ]
+  }
+}

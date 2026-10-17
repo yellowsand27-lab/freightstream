@@ -1,0 +1,16 @@
+# secrets and connection files (deploy.sh, *.connection.yaml, FreightStream.yaml, original SQL with passwords)
+documents/
+.env*
+.jwt_secret
+**/.jwt_secret
+# customer data extracts
+extract/
+# local runtime / build
+node_modules/
+dist/
+.venv/
+__pycache__/
+.logs/
+.run/
+.DS_Store
+.claude/settings.local.json
