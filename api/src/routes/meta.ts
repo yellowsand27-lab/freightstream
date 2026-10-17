@@ -22,8 +22,10 @@ export default async function meta(app: FastifyInstance) {
              COALESCE(SUM(row_count) FILTER (WHERE status = 'ok'), 0)::int rows
       FROM run`);
     const status = !last?.started_at ? "planned" : last.failed ? "partial" : "ok";
+    // fs-etl.timer: every day 03:00 UTC
+    const next = new Date(); next.setUTCHours(3, 0, 0, 0); if (next.getTime() <= Date.now()) next.setUTCDate(next.getUTCDate() + 1);
     return {
-      jobs: [{ id: "etl", title: { en: "Nightly refresh from iFMS", zh: "每晚从 iFMS 同步" }, schedule: "03:00 UTC",
+      jobs: [{ id: "etl", title: { en: "Nightly refresh from iFMS", zh: "每晚从 iFMS 同步" }, schedule: "03:00 UTC", next: next.toISOString(),
         last: last?.started_at ? { at: last.finished_at ?? last.started_at, status, summary: { tables: last.ok + last.failed, failed: last.failed, rows: last.rows } } : null }],
       alerts: last?.failed ? [{ level: "warn", text: { en: `${last.failed} table(s) failed in the last refresh`, zh: `最近一次同步有 ${last.failed} 张表失败` }, at: last.finished_at }] : [],
       data: { asOf: last?.finished_at ?? null }
