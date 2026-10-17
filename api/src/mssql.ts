@@ -20,9 +20,12 @@ function loadCfg(): MsCfg {
   // 环境变量优先，其次 yaml（enabled 的 mssql 组）
   const p = resolve(ROOT, "documents", "FreightStream.yaml");
   let g: Record<string, unknown> = {};
-  if (existsSync(p)) {
-    const doc = parseYaml(readFileSync(p, "utf8"));
-    g = (doc?.dbGroups ?? []).find((x: Record<string, unknown>) => x.enabled && x.driver === "mssql") ?? {};
+  // 服务器上连接信息全在环境变量里（fs-api 以普通账号运行，读不了 root 的 documents/）；yaml 只给本机开发用
+  if (!process.env.FS_MSSQL_PASSWORD && existsSync(p)) {
+    try {
+      const doc = parseYaml(readFileSync(p, "utf8"));
+      g = (doc?.dbGroups ?? []).find((x: Record<string, unknown>) => x.enabled && x.driver === "mssql") ?? {};
+    } catch { /* 读不了就只用环境变量 */ }
   }
   const opt = (g.options ?? {}) as Record<string, unknown>;
   return {
