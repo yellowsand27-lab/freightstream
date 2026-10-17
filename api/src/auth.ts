@@ -53,6 +53,13 @@ function roleForGroup(groupName: string | null): AuthUser["role"] {
   return "viewer";
 }
 
+/**
+ * 能看 FreightStream 数据的人（旧登录用）：只有这几个账号，其他 iFMS 用户登录一律拒绝，已签发的旧令牌也立即失效。
+ * 中台令牌按 perms.fs 判定（console-api 的 modules.yaml 里是同一份名单）。可用 FS_ALLOWED_USERS 覆盖（逗号分隔）。
+ */
+const ALLOWED = new Set((process.env.FS_ALLOWED_USERS ?? "QGX,AlecMZ,rachel").split(",").map(norm).filter(Boolean));
+const allowed = (userId: string) => ALLOWED.has(norm(userId));
+
 export interface AuthUser { sub: string; name: string; email: string | null; role: "admin" | "editor" | "viewer"; }
 
 declare module "fastify" {
@@ -76,7 +83,7 @@ export async function authRoutes(app: FastifyInstance) {
     // 无论用户是否存在都做一次等长比较，避免用用户名探测
     const stored = fsu?.password ? stripSentinel(fsu.password) : null;
     const ok = constantTimeEqual(password, stored);
-    if (!fsu || !fsu.enabled || !stored || !ok) {
+    if (!fsu || !fsu.enabled || !stored || !ok || !allowed(fsu.userId)) {
       return reply.code(401).send({ error: "invalid_credentials" });
     }
 
@@ -123,6 +130,7 @@ export async function requireAuth(req: FastifyRequest, reply: FastifyReply) {
   } catch {
     return reply.code(401).send({ error: "token_expired_or_invalid" });
   }
+  if (!allowed(req.user.sub)) return reply.code(401).send({ error: "token_expired_or_invalid" });
 }
 
 /** 要求可写角色（admin / editor）——用于额度、分类等写接口 */
