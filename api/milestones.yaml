@@ -1,0 +1,59 @@
+# FreightStream milestones (shown on the TransKnights AI Console "Project" page through GET /api/milestones).
+# status: done | in_progress | planned | blocked     date: finished (done) or target (otherwise)
+project:
+  en: FreightStream — receivables and cost control analytics on a nightly copy of iFMS
+  zh: FreightStream：基于 iFMS 夜间副本的应收与成本管控分析
+updated: 2026-10-16
+
+milestones:
+  - id: design
+    status: done
+    date: 2026-09-04
+    title: { en: "Capability map and data survey", zh: "能力地图与数据摸底" }
+    items:
+      - { done: true, en: "Capability map (what to control, which iFMS tables)", zh: "管控能力地图（管什么、用哪些 iFMS 表）" }
+      - { done: true, en: "Read-only iFMS login (freightstream_reader)", zh: "iFMS 只读登录（freightstream_reader）" }
+
+  - id: warehouse
+    status: done
+    date: 2026-09-15
+    title: { en: "Analytics database and nightly refresh", zh: "分析库与夜间同步" }
+    items:
+      - { done: true, en: "Postgres database, roles, schemas (mirror / ref / mart / ops / notify)", zh: "Postgres 分析库、角色、分层（mirror / ref / mart / ops / notify）" }
+      - { done: true, en: "Nightly mirror of iFMS (9 tables, ~2 million rows)", zh: "每晚同步 iFMS（9 张表，约 200 万行）" }
+      - { done: true, en: "Customer classification, credit limit seeds, audit of every change", zh: "客户分类、额度初始值、变更审计" }
+      - { done: true, en: "Point-in-time aging checked against the 09-01 baseline", zh: "历史时点账龄，按 09-01 基线校验" }
+
+  - id: analytics
+    status: done
+    date: 2026-09-25
+    title: { en: "Analytics and alerts", zh: "分析与告警" }
+    items:
+      - { done: true, en: "Receivables, credit breaches, overdue against each customer's baseline", zh: "应收、额度超限、按客户基线的逾期" }
+      - { done: true, en: "Cost recovery, duplicate payments, billing timeliness", zh: "成本转嫁、重复付款、开票及时性" }
+      - { done: true, en: "Profitability per file and operator KPIs", zh: "单票利润与操作员 KPI" }
+
+  - id: web
+    status: done
+    date: 2026-09-29
+    title: { en: "Web and deployment", zh: "网页与部署" }
+    items:
+      - { done: true, en: "12 pages, English / Chinese / Spanish, iFMS sign-in", zh: "12 个页面，中 / 英 / 西班牙语，iFMS 账号登录" }
+      - { done: true, en: "Deployed on ai.transknights.com (fs-api, nightly fs-etl)", zh: "部署到 ai.transknights.com（fs-api、夜间 fs-etl）" }
+
+  - id: console
+    status: done
+    date: 2026-10-16
+    title: { en: "Moved into the TransKnights AI Console", zh: "并入 TransKnights AI 中台" }
+    items:
+      - { done: true, en: "Pages in the console under /fs, one sign-in for all modules", zh: "页面进入中台 /fs，所有模块一次登录" }
+      - { done: true, en: "Access limited to QGX, Alec and Rachel", zh: "只允许 QGX、Alec、Rachel 查看" }
+      - { done: true, en: "fs-api runs without root; release by SSH key", zh: "fs-api 不再以 root 运行；用 SSH key 发布" }
+
+  - id: cutover
+    status: planned
+    date: 2026-11-04
+    title: { en: "Old FreightStream site retired", zh: "停用旧 FreightStream 网站" }
+    items:
+      - { done: false, en: "Old addresses open the console pages", zh: "旧地址跳转到中台页面" }
+      - { done: false, en: "Old sign-in removed; capability map no longer public", zh: "去掉旧登录；能力地图不再公开" }

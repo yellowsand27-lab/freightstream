@@ -31,7 +31,8 @@ await app.register(authRoutes);
 app.addHook("onRequest", async (req, reply) => {
   const url = req.url.split("?")[0];
   if (!url.startsWith("/api/")) return;
-  if (url === "/api/health" || url.startsWith("/api/auth/")) return;
+  // signed file links carry their own permission (the signature); a new tab cannot send the token
+  if (url === "/api/health" || url.startsWith("/api/auth/") || /^\/api\/files\/\d+\./.test(url)) return;
   await requireAuth(req, reply);
 });
 

@@ -4,5 +4,6 @@ set -euo pipefail
 cd "$(dirname "$0")/../api"
 npm run build
 rsync -az --delete dist/ tk:/opt/freightstream/api/dist/
+rsync -az milestones.yaml tk:/opt/freightstream/api/milestones.yaml
 ssh tk 'sudo -n systemctl restart fs-api && sleep 2 && systemctl is-active fs-api && curl -s -m 10 http://127.0.0.1:8787/api/health'
 echo
