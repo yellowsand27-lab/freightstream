@@ -30,19 +30,23 @@ export default async function meta(app: FastifyInstance) {
 
   // 中台「运行状态」页用（docs/03-module-contract.md）：夜间同步任务的最近一次结果 + 数据时间
   app.get("/api/status", async () => {
-    const [last] = await q<{ finished_at: string | null; started_at: string; ok: number; failed: number; rows: number }>(`
+    // the newest run: tables still "running" are in progress (not failed) unless stuck for 2 hours (the ETL died)
+    const [last] = await q<{ finished_at: string | null; started_at: string; ok: number; failed: number; running: number; rows: number }>(`
       WITH run AS (SELECT * FROM mirror.refresh_log WHERE started_at > (SELECT MAX(started_at) FROM mirror.refresh_log) - interval '6 hours')
       SELECT MAX(finished_at) finished_at, MIN(started_at) started_at,
-             COUNT(*) FILTER (WHERE status = 'ok')::int ok, COUNT(*) FILTER (WHERE status <> 'ok')::int failed,
+             COUNT(*) FILTER (WHERE status = 'ok')::int ok,
+             COUNT(*) FILTER (WHERE status NOT IN ('ok', 'running') OR (status = 'running' AND started_at < now() - interval '2 hours'))::int failed,
+             COUNT(*) FILTER (WHERE status = 'running' AND started_at >= now() - interval '2 hours')::int running,
              COALESCE(SUM(row_count) FILTER (WHERE status = 'ok'), 0)::int rows
       FROM run`);
-    const status = !last?.started_at ? "planned" : last.failed ? "partial" : "ok";
+    const status = !last?.started_at ? "planned" : last.running ? "running" : last.failed ? "partial" : "ok";
     // fs-etl.timer: every day 03:00 UTC
     const next = new Date(); next.setUTCHours(3, 0, 0, 0); if (next.getTime() <= Date.now()) next.setUTCDate(next.getUTCDate() + 1);
     return {
       jobs: [{ id: "etl", title: { en: "Nightly refresh from iFMS", zh: "每晚从 iFMS 同步" }, schedule: "03:00 UTC", next: next.toISOString(),
-        last: last?.started_at ? { at: last.finished_at ?? last.started_at, status, summary: { tables: last.ok + last.failed, failed: last.failed, rows: last.rows } } : null }],
-      alerts: last?.failed ? [{ level: "warn", text: { en: `${last.failed} table(s) failed in the last refresh`, zh: `最近一次同步有 ${last.failed} 张表失败` }, at: last.finished_at }] : [],
+        running: !!last?.running,
+        last: last?.started_at ? { at: last.finished_at ?? last.started_at, status, summary: { tables: last.ok + last.failed + last.running, failed: last.failed, rows: last.rows } } : null }],
+      alerts: last?.failed && !last.running ? [{ level: "warn", text: { en: `${last.failed} table(s) failed in the last refresh`, zh: `最近一次同步有 ${last.failed} 张表失败` }, at: last.finished_at }] : [],
       data: { asOf: last?.finished_at ?? null }
     };
   });
